@@ -19,9 +19,9 @@ Read `node_modules/next/dist/docs/` before using Next APIs (this version differs
 - `supabase db push`: apply migrations. Use `supabase config push` only after checking its diff, because it can overwrite dashboard auth settings.
 
 ## Access
-- The anon role has no database access: no API reads at all. Public pages read published data on the server with the service key (`lib/supabase/service.ts`, server-only). Admin pages act as the signed-in admin through RLS (`is_admin()`).
+- The anon role has no database access: no API reads at all. The public map reads `map.sites` (published sites, display fields only) through the read-only `map_reader` login (`MAP_DATABASE_URL`, `lib/map-db.ts`). Submissions use the service key on the server (`lib/supabase/service.ts`). Admin pages act as the signed-in admin through RLS (`is_admin()`).
 - Don't add public data endpoints. The map payload is limited to the fields it displays.
 
 ## Env
-`.env.local` here holds the Supabase URL, anon key and service role key (Vercel needs the service role key too: the map and submissions use it); `ANTHROPIC_API_KEY` sits in `~/code/.env.local` (loaded by `lib/env.ts` for scripts).
+`.env.local` here holds the Supabase URL, anon key and service role key (Vercel needs `MAP_DATABASE_URL` for the map, plus the service role key for submissions); `ANTHROPIC_API_KEY` sits in `~/code/.env.local` (loaded by `lib/env.ts` for scripts).
 Turnstile: `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` (Cloudflare test keys are used automatically in dev).

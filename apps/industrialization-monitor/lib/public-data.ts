@@ -1,9 +1,10 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
-import { serviceClient } from "@/lib/supabase/service";
+import { mapDb } from "@/lib/map-db";
 
-// Published site data for the map and its list view, read on the server only (the database exposes
-// nothing to anonymous API callers). Only fields the map displays are returned.
+// Published site data for the map and its list view, read on the server through the read-only
+// map_reader login (lib/map-db.ts). The database exposes nothing to anonymous API callers, and the
+// map.sites view returns only the fields the map displays.
 // Cached under the "sites" tag; approving a review proposal calls updateTag("sites").
 
 export const SITES_TAG = "sites";
@@ -43,42 +44,44 @@ export type MapSite = {
   source_url: string | null;
 };
 
+type Row = {
+  id: string; company: string; industry: string; sub_industry: string | null; status: string | null;
+  mfg_type: string | null; site_type: string | null; strategy: string | null; first_of_kind: boolean | null;
+  city: string | null; state: string | null; country: string | null; lat: number; lng: number;
+  sqft: number | null; cost_mm: number | null; full_time_jobs: number | null; capacity_value: number | null; capacity_unit: string | null;
+  hq_city: string | null; hq_state: string | null; hq_country: string | null;
+  construction_date: string | null; construction_status: "planned" | "actual" | null;
+  production_date: string | null; production_status: "planned" | "actual" | null; source_url: string | null;
+};
+
 export async function getMapSites(): Promise<MapSite[]> {
   "use cache";
   cacheTag(SITES_TAG);
   cacheLife("hours");
 
-  const db = serviceClient();
-  const [sites, milestones, announced] = await Promise.all([
-    db.from("sites_public")
-      .select("id, company, industry, sub_industry, status, mfg_type, site_type, manufacturing_strategy, first_of_kind, city, state, country, lat, lng, sqft, cost_mm, full_time_jobs, capacity_value, capacity_unit, hq_city, hq_state, hq_country")
-      .not("lat", "is", null).not("lng", "is", null).limit(5000),
-    db.from("site_milestones_current").select("site_id, type, milestone_date, milestone_status").limit(10000),
-    db.from("announcements").select("site_id, source_url, announced_on").eq("type", "site_announced").eq("is_public", true).not("source_url", "is", null).limit(10000),
-  ]);
-  if (sites.error) throw new Error(`sites_public: ${sites.error.message}`);
+  // map.sites already filters to published, located sites and exposes only display fields.
+  const rows = await mapDb()<Row[]>`
+    select id, company, industry, sub_industry, status, mfg_type, site_type, strategy, first_of_kind,
+           city, state, country, lat::float8 as lat, lng::float8 as lng,
+           sqft::float8 as sqft, cost_mm::float8 as cost_mm, full_time_jobs, capacity_value::float8 as capacity_value, capacity_unit,
+           hq_city, hq_state, hq_country,
+           construction_date::text as construction_date, construction_status,
+           production_date::text as production_date, production_status, source_url
+    from map.sites
+  `;
+  const milestone = (date: string | null, status: "planned" | "actual" | null): Milestone =>
+    date ? { date, status: status ?? "planned" } : null;
 
-  const ms = new Map<string, Record<string, Milestone>>();
-  for (const m of milestones.data ?? []) {
-    const entry = ms.get(m.site_id) ?? {};
-    entry[m.type] = { date: m.milestone_date, status: m.milestone_status };
-    ms.set(m.site_id, entry);
-  }
-  const links = new Map<string, string>();
-  for (const a of (announced.data ?? []).sort((x, y) => (x.announced_on ?? "").localeCompare(y.announced_on ?? ""))) {
-    if (a.site_id && !links.has(a.site_id)) links.set(a.site_id, a.source_url);
-  }
-
-  return (sites.data ?? []).map((s) => ({
+  return rows.map((s) => ({
     id: s.id,
     company: s.company,
-    industry: s.industry ?? "Other",
+    industry: s.industry,
     sub_industry: s.sub_industry,
     color_group: colorGroupFor(s.industry),
     status: s.status,
     mfg_type: s.mfg_type,
     site_type: s.site_type,
-    strategy: s.manufacturing_strategy,
+    strategy: s.strategy,
     first_of_kind: s.first_of_kind,
     city: s.city,
     state: s.state,
@@ -88,11 +91,10 @@ export async function getMapSites(): Promise<MapSite[]> {
     sqft: s.sqft,
     cost_mm: s.cost_mm,
     full_time_jobs: s.full_time_jobs,
-    capacity: s.capacity_value != null ? `${Number(s.capacity_value).toLocaleString("en-US")} ${s.capacity_unit ?? ""}`.trim() : null,
+    capacity: s.capacity_value != null ? `${s.capacity_value.toLocaleString("en-US")} ${s.capacity_unit ?? ""}`.trim() : null,
     hq: [s.hq_city, s.hq_state ?? s.hq_country].filter(Boolean).join(", ") || null,
-    construction_start: ms.get(s.id)?.construction_start ?? null,
-    production_start: ms.get(s.id)?.production_start ?? null,
-    source_url: links.get(s.id) ?? null,
+    construction_start: milestone(s.construction_date, s.construction_status),
+    production_start: milestone(s.production_date, s.production_status),
+    source_url: s.source_url,
   }));
 }
-

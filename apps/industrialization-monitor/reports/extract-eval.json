@@ -1,0 +1,155 @@
+{
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "promptVersion": "2dcbfd4e352f7ab4",
+  "scored": 132,
+  "cost": 4.065691999999998,
+  "fields": [
+    {
+      "field": "article marked relevant",
+      "hit": 131,
+      "total": 132,
+      "pct": 99
+    },
+    {
+      "field": "company identified",
+      "hit": 129,
+      "total": 132,
+      "pct": 98
+    },
+    {
+      "field": "announced_on within 7 days",
+      "hit": 90,
+      "total": 113,
+      "pct": 80
+    },
+    {
+      "field": "milestone date: exact",
+      "hit": 15,
+      "total": 51,
+      "pct": 29
+    },
+    {
+      "field": "milestone date: within 31 days",
+      "hit": 19,
+      "total": 51,
+      "pct": 37
+    },
+    {
+      "field": "site city",
+      "hit": 92,
+      "total": 119,
+      "pct": 77
+    },
+    {
+      "field": "site state",
+      "hit": 102,
+      "total": 120,
+      "pct": 85
+    },
+    {
+      "field": "site cost_mm: extracted at all",
+      "hit": 39,
+      "total": 81,
+      "pct": 48
+    },
+    {
+      "field": "site cost_mm: agrees with sheet (±10%)",
+      "hit": 29,
+      "total": 39,
+      "pct": 74
+    },
+    {
+      "field": "site sqft: extracted at all",
+      "hit": 48,
+      "total": 77,
+      "pct": 62
+    },
+    {
+      "field": "site sqft: agrees with sheet (±10%)",
+      "hit": 40,
+      "total": 48,
+      "pct": 83
+    },
+    {
+      "field": "site full_time_jobs: extracted at all",
+      "hit": 42,
+      "total": 86,
+      "pct": 49
+    },
+    {
+      "field": "site full_time_jobs: agrees with sheet (±10%)",
+      "hit": 37,
+      "total": 42,
+      "pct": 88
+    },
+    {
+      "field": "site construction_jobs: extracted at all",
+      "hit": 10,
+      "total": 20,
+      "pct": 50
+    },
+    {
+      "field": "site construction_jobs: agrees with sheet (±10%)",
+      "hit": 6,
+      "total": 10,
+      "pct": 60
+    }
+  ],
+  "byType": [
+    {
+      "field": "site_announced",
+      "hit": 65,
+      "total": 111,
+      "pct": 59
+    },
+    {
+      "field": "production_start:planned",
+      "hit": 30,
+      "total": 64,
+      "pct": 47
+    },
+    {
+      "field": "construction_start:actual",
+      "hit": 7,
+      "total": 7,
+      "pct": 100
+    },
+    {
+      "field": "production_start:actual",
+      "hit": 8,
+      "total": 8,
+      "pct": 100
+    },
+    {
+      "field": "production_at_rate:actual",
+      "hit": 0,
+      "total": 2,
+      "pct": 0
+    },
+    {
+      "field": "construction_start:planned",
+      "hit": 6,
+      "total": 10,
+      "pct": 60
+    },
+    {
+      "field": "status_change",
+      "hit": 0,
+      "total": 1,
+      "pct": 0
+    },
+    {
+      "field": "cancellation",
+      "hit": 2,
+      "total": 2,
+      "pct": 100
+    },
+    {
+      "field": "delay",
+      "hit": 0,
+      "total": 1,
+      "pct": 0
+    }
+  ]
+}

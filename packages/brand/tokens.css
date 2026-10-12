@@ -1,0 +1,142 @@
+/*
+ * NextGen Industry Group — design tokens
+ * Source of truth for every NGIG app/site. See BRAND.md for usage rules.
+ *
+ * Usage (Tailwind v4):  @import "@ngig/brand/tokens.css";
+ * Fonts: load Funnel Display + Roboto Flex (next/font/google or Google Fonts) and
+ *        expose them as --font-funnel-display / --font-roboto-flex.
+ */
+
+/* ---------------------------------------------------------------------------
+ * 1. Raw brand palette (from the brand guide — do not edit)
+ * ------------------------------------------------------------------------- */
+:root {
+  /* Primary */
+  --ngig-plum: #6d2149;
+  --ngig-linen: #eee9e2;
+  --ngig-mist: #f6f6f6;
+  /* Secondary */
+  --ngig-copper: #c86438;
+  --ngig-sage: #9aa79c;
+  --ngig-sage-light: #d6e2d8;
+  /* Neutral */
+  --ngig-charcoal: #343434;
+  --ngig-gray-500: #a0a3a7;
+  --ngig-gray-300: #c8ccd2;
+  --ngig-gray-100: #e7eaee;
+  --ngig-white: #ffffff;
+
+  /* Derived (not in the guide; added for accessibility / dark mode) */
+  --ngig-copper-dark: #a9522c;   /* white text on copper fills: 5.3:1 */
+  --ngig-gray-700: #6b6e73;      /* muted body text on white: ~5:1 */
+  --ngig-plum-light: #b9789a;    /* plum accent on dark backgrounds: 5.1:1 */
+  --ngig-copper-light: #da8559;  /* copper accent on dark backgrounds: 6.1:1 */
+  --ngig-ink: #1e1a1c;           /* warm near-black for dark mode */
+  --ngig-ink-2: #2a2527;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Semantic tokens — apps use THESE, not the raw palette
+ * ------------------------------------------------------------------------- */
+:root {
+  --color-bg: var(--ngig-white);
+  --color-bg-subtle: var(--ngig-mist);
+  --color-surface-warm: var(--ngig-linen);
+  --color-border: var(--ngig-gray-100);
+  --color-border-strong: var(--ngig-gray-300);
+
+  --color-text: var(--ngig-charcoal);
+  --color-text-muted: var(--ngig-gray-700);
+  --color-text-on-primary: var(--ngig-white);
+
+  --color-primary: var(--ngig-plum);
+  --color-accent: var(--ngig-copper);          /* graphics, large text (≥24px) only */
+  --color-accent-fill: var(--ngig-copper-dark); /* buttons/badges with white text */
+  --color-support: var(--ngig-sage);
+  --color-support-subtle: var(--ngig-sage-light);
+  --color-focus: var(--ngig-copper);
+
+  --font-display: var(--font-funnel-display), "Funnel Display", system-ui, sans-serif;
+  --font-body: var(--font-roboto-flex), "Roboto Flex", system-ui, sans-serif;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: var(--ngig-ink);
+    --color-bg-subtle: var(--ngig-ink-2);
+    --color-surface-warm: var(--ngig-ink-2);
+    --color-border: #3a3437;
+    --color-border-strong: #4d4649;
+    --color-text: var(--ngig-linen);
+    --color-text-muted: var(--ngig-gray-500);
+    --color-primary: var(--ngig-plum-light);
+    --color-text-on-primary: var(--ngig-ink);
+    --color-accent: var(--ngig-copper-light);
+  }
+}
+:root[data-theme="dark"] {
+  --color-bg: var(--ngig-ink);
+  --color-bg-subtle: var(--ngig-ink-2);
+  --color-surface-warm: var(--ngig-ink-2);
+  --color-border: #3a3437;
+  --color-border-strong: #4d4649;
+  --color-text: var(--ngig-linen);
+  --color-text-muted: var(--ngig-gray-500);
+  --color-primary: var(--ngig-plum-light);
+  --color-text-on-primary: var(--ngig-ink);
+  --color-accent: var(--ngig-copper-light);
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Tailwind v4 theme mapping (ignored by non-Tailwind consumers)
+ *    Gives utilities like bg-primary, text-muted, font-display, border-border.
+ * ------------------------------------------------------------------------- */
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-bg-subtle: var(--color-bg-subtle);
+  --color-surface-warm: var(--color-surface-warm);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-fg: var(--color-text);
+  --color-muted: var(--color-text-muted);
+  --color-on-primary: var(--color-text-on-primary);
+  --color-primary: var(--color-primary);
+  --color-accent: var(--color-accent);
+  --color-accent-fill: var(--color-accent-fill);
+  --color-support: var(--color-support);
+  --color-support-subtle: var(--color-support-subtle);
+  --color-plum: var(--ngig-plum);
+  --color-copper: var(--ngig-copper);
+  --color-linen: var(--ngig-linen);
+  --color-charcoal: var(--ngig-charcoal);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. Base typography
+ * ------------------------------------------------------------------------- */
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+h1, h2, h3, .ngig-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}

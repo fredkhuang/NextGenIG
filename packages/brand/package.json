@@ -1,0 +1,11 @@
+{
+  "name": "@ngig/brand",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NextGen Industry Group design tokens, fonts guidance and logos",
+  "exports": {
+    "./tokens.css": "./tokens.css",
+    "./logos/*": "./logos/*"
+  },
+  "files": ["tokens.css", "logos", "BRAND.md"]
+}

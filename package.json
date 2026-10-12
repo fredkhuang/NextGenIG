@@ -1,0 +1,8 @@
+{
+  "name": "ngig",
+  "private": true,
+  "packageManager": "pnpm@12.11.2",
+  "scripts": {
+    "monitor": "pnpm --filter @ngig/industrialization-monitor"
+  }
+}

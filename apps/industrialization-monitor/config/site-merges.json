@@ -1,0 +1,7 @@
+{
+  "$comment": "Legacy sheet rows confirmed to be the same physical site. The `merge` row is folded into the `keep` row on import; `overrides` fix values after merging.",
+  "merges": [
+    { "keep": 168, "merge": 201, "overrides": { "city": "Exeter" }, "note": "Phoenix Tailings, Exeter NH (confirmed 2026-10-11)" },
+    { "keep": 120, "merge": 210, "note": "Twelve AirPlant One, Moses Lake WA (confirmed 2026-10-11)" }
+  ]
+}

@@ -9,7 +9,8 @@ import "@/lib/env";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
 import { normalizeName, sameCompany } from "@/lib/dedupe";
-import { readCached, sha } from "@/lib/extract/cache";
+import { readCached } from "@/lib/extract/cache";
+import { fingerprint } from "@/lib/queue/fingerprint";
 import { transformRow } from "@/lib/import/transform";
 import { readLegacyWorkbook } from "@/lib/import/xlsx";
 import { type DbAnnouncement, type DbSite, type Proposal, buildProposals } from "@/lib/queue/relabel";
@@ -23,17 +24,6 @@ const dryRun = args.includes("--dry-run");
 if (!xlsx) {
   console.error('Usage: pnpm queue:relabel "<legacy .xlsx>" [--dry-run]');
   process.exit(1);
-}
-
-/** Identity of a proposal that survives prompt changes (ignores enrichments like funding_stage). */
-function fingerprint(p: Proposal & { url: string }) {
-  const c = (p.payload as { create?: { type: string; milestone_status: string | null; milestone_date: string | null; amount_usd: number | null; site_id: string | null } }).create;
-  const set = (p.payload as { set?: Record<string, unknown> }).set;
-  return sha(JSON.stringify([
-    p.kind, p.target_id, p.url,
-    c ? [c.type, c.milestone_status, c.milestone_date, c.amount_usd, c.site_id] : null,
-    set ? Object.keys(set).filter((k) => k !== "funding_stage").sort() : null,
-  ]));
 }
 
 async function main() {

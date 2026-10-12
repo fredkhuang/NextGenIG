@@ -1,7 +1,8 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
+import { SITES_TAG } from "@/lib/public-data";
 import { ApplyError, applyProposal } from "@/lib/queue/apply";
 import type { QueuePayload } from "@/lib/queue/types";
 
@@ -13,7 +14,7 @@ export async function reviewProposal(_prev: ReviewState, formData: FormData): Pr
   const decision = formData.get("decision") === "approve" ? "approved" : "rejected";
 
   const { data: proposal, error } = await supabase
-    .from("proposed_changes").select("id, status, changes").eq("id", id).maybeSingle();
+    .from("proposed_changes").select("id, status, changes, submission_id").eq("id", id).maybeSingle();
   if (error || !proposal) return { status: "error", message: "Proposal not found." };
   if (proposal.status !== "pending") return { status: "error", message: `Already ${proposal.status}.` };
 
@@ -29,7 +30,13 @@ export async function reviewProposal(_prev: ReviewState, formData: FormData): Pr
     .update({ status: decision, reviewed_by: email, reviewed_at: new Date().toISOString() })
     .eq("id", id);
   if (updateError) return { status: "error", message: updateError.message };
+  if (proposal.submission_id) {
+    await supabase.from("submissions")
+      .update({ status: decision, reviewed_by: email, reviewed_at: new Date().toISOString() })
+      .eq("id", proposal.submission_id);
+  }
 
+  if (decision === "approved") updateTag(SITES_TAG); // public map picks up the change
   refresh();
   return { status: "done" };
 }

@@ -39,6 +39,14 @@ export type AnnouncementDraft = {
 
 export type SiteDraft = {
   company_id: string;
+  /** Optional facts and publish flag (community submissions publish on approval). */
+  status?: string | null;
+  mfg_type?: string | null;
+  site_type?: string | null;
+  sqft?: number | null;
+  cost_mm?: number | null;
+  full_time_jobs?: number | null;
+  is_published?: boolean;
   name: string | null;
   address: string | null;
   city: string | null;
@@ -60,7 +68,20 @@ export type QueuePayload =
   | { kind: "new_announcement"; create: AnnouncementDraft }
   | { kind: "add_source"; announcement_id: string; source: { source_url: string; canonical_url: string; source_domain: string | null; evidence_quote: string | null } }
   | { kind: "site_update"; site_id: string; set: Diff }
-  | { kind: "possible_new_site"; site: SiteDraft; announcements: AnnouncementDraft[] };
+  | { kind: "possible_new_site"; site: SiteDraft; announcements: AnnouncementDraft[] }
+  /** Community submission of a company not yet tracked, with its first site. */
+  | { kind: "new_company"; company: CompanyDraft; site: Omit<SiteDraft, "company_id">; announcements: Omit<AnnouncementDraft, "company_id" | "site_id">[] }
+  /** News tip: nothing is applied automatically; approving marks it handled. */
+  | { kind: "tip"; url: string; notes: string | null; company_name: string | null };
+
+export type CompanyDraft = {
+  name: string;
+  website: string | null;
+  industry: string | null;
+  hq_city: string | null;
+  hq_state: string | null;
+  hq_country: string | null;
+};
 
 export type QueueKind = QueuePayload["kind"];
 
@@ -73,4 +94,6 @@ export const KIND_LABELS: Record<QueueKind, string> = {
   add_source: "Add corroborating source",
   site_update: "Update site facts",
   possible_new_site: "Possible new site",
+  new_company: "New company",
+  tip: "News tip",
 };

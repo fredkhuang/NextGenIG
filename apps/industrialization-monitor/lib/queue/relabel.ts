@@ -66,7 +66,8 @@ export function buildProposals(input: {
   const fromUrl = announcements.filter((a) => a.canonical_url === article.canonical_url || a.extra_urls.includes(article.canonical_url));
   const defaultSite =
     sites.find((s) => s.id === fromUrl.find((a) => a.site_id)?.site_id) ??
-    sites.find((s) => s.legacy_uid === input.expectedSiteUid) ?? null;
+    sites.find((s) => s.legacy_uid === input.expectedSiteUid) ??
+    (sites.length === 1 ? sites[0] : null); // new articles: a single-site company's news is about that site
 
   // --- site resolution -------------------------------------------------------------------------
   const newSites = new Map<string, { site: SiteDraft; announcements: AnnouncementDraft[]; quote: string; confidence: number }>();
@@ -223,7 +224,9 @@ export function buildProposals(input: {
       m.type === a.type && (m.milestone_status ?? null) === (status ?? null) && (m.site_id ?? null) === (siteId ?? null) &&
       m.canonical_url !== article.canonical_url && !m.extra_urls.includes(article.canonical_url) &&
       (MILESTONES.has(a.type)
-        ? m.milestone_date === a.milestone_date
+        ? m.milestone_date === a.milestone_date ||
+          // An actual milestone happens once; "began production in June" corroborates June 10.
+          (status === "actual" && !!m.milestone_date && !!a.milestone_date && daysApart(m.milestone_date, a.milestone_date) <= 31)
         : MONEY.has(a.type)
           ? (a.amount_usd != null && m.amount_usd != null && near(a.amount_usd, m.amount_usd)) ||
             (!!a.announced_on && !!m.announced_on && daysApart(a.announced_on, m.announced_on) <= ANNOUNCEMENT_MERGE_DAYS)

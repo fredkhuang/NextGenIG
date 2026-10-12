@@ -63,3 +63,13 @@ describe("buildProposals", () => {
     expect(run([], [x({ type: "construction_start", milestone_status: "actual", milestone_date: null }), x({ company_name: "Someone Else", type: "funding_round" })])).toEqual([]);
   });
 });
+
+describe("actual milestones", () => {
+  it("treats an actual date within a month as the same event", () => {
+    const ps = run(
+      [ann({ id: "p1", type: "production_start", milestone_status: "actual", milestone_date: "2026-06-10", canonical_url: "https://other.com/y" })],
+      [x({ type: "production_start", milestone_status: "actual", milestone_date: "2026-06-01" })],
+    );
+    expect(ps.map((p) => p.kind)).toEqual(["add_source"]);
+  });
+});

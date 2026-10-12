@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element -- brand SVGs are static assets */
 import Link from "next/link";
 import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
@@ -16,20 +15,12 @@ type SiteLabel = { id: string; city: string | null; state: string | null; countr
 
 export default function QueuePage({ searchParams }: PageProps<"/admin/queue">) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-8">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <img src="/lettermark-color.svg" alt="" className="h-8 w-auto" />
-          <div>
-            <h1 className="text-2xl text-primary">Review queue</h1>
-            <p className="text-sm text-muted">Startup Industrialization Monitor</p>
-          </div>
-        </div>
-      </header>
+    <>
+      <h1 className="text-2xl text-primary">Review queue</h1>
       <Suspense fallback={<p className="text-muted">Loading proposals…</p>}>
         <Queue searchParams={searchParams} />
       </Suspense>
-    </main>
+    </>
   );
 }
 
@@ -205,6 +196,31 @@ function ProposalCard({ row, sites }: { row: Row; sites: Map<string, SiteLabel> 
       {p.kind === "new_announcement" && <Draft d={p.create} sites={sites} />}
       {p.kind === "site_update" && (<><p className="text-sm text-muted">Site: {siteLabel(sites, p.site_id)}</p><DiffTable set={p.set} /></>)}
       {p.kind === "add_source" && <p className="text-sm">Adds <a className="text-primary underline" href={p.source.source_url} target="_blank" rel="noreferrer">{p.source.source_domain}</a> as a source.</p>}
+      {p.kind === "new_company" && (
+        <div className="flex flex-col gap-2 text-sm">
+          <p>
+            <strong>{p.company.name}</strong>
+            {p.company.website && <> · <a className="text-primary underline" href={p.company.website} target="_blank" rel="noreferrer">{p.company.website}</a></>}
+            {p.company.industry && <> · {p.company.industry}</>}
+          </p>
+          <p>
+            Site: {[p.site.address, p.site.city, p.site.state, p.site.country].filter(Boolean).join(", ") || "location not given"}
+            {p.site.status && <> · {p.site.status}</>}
+            {p.site.site_type && <> · {p.site.site_type}</>}
+            {p.site.sqft != null && <> · {p.site.sqft.toLocaleString()} sq ft</>}
+            {p.site.full_time_jobs != null && <> · {p.site.full_time_jobs} jobs</>}
+            {p.site.cost_mm != null && <> · ${p.site.cost_mm}M</>}
+          </p>
+          <p className="text-muted">If a company with this name already exists, the site is added to it instead.</p>
+        </div>
+      )}
+      {p.kind === "tip" && (
+        <div className="text-sm">
+          <p>{p.company_name && <><strong>{p.company_name}</strong>: </>}<a className="text-primary underline" href={p.url} target="_blank" rel="noreferrer">{p.url}</a></p>
+          {p.notes && <p className="text-muted">{p.notes}</p>}
+          <p className="text-muted">Approving marks the tip handled. Add any facts on the company or site page.</p>
+        </div>
+      )}
       {p.kind === "possible_new_site" && (
         <div className="flex flex-col gap-2 text-sm">
           <p>New site (unpublished until you publish it): {[p.site.name, p.site.address, p.site.city, p.site.county, p.site.state, p.site.country].filter(Boolean).join(", ")}</p>

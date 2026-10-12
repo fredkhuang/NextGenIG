@@ -25,7 +25,19 @@ Derived values (not in the guide, added for accessibility and dark mode):
 
 **Proportions.** Plum and Linen carry the brand. Copper is a spark, used sparingly as in the logo. Sage and the neutrals support.
 
-**Data visualization.** The brand palette has too few distinct hues for categorical charts (e.g. 8 industries on the map). Build a categorical palette that leads with Plum and Copper and extends with validated hues. Load the `dataviz` skill and run its validator before shipping a chart. Don't use Sage and Gray together as two categories, because they're too close.
+**Data visualization.** Use the validated categorical slots `--viz-cat-1…4` (light / dark):
+
+| Slot | Light | Dark | Hue |
+|---|---|---|---|
+| 1 | `#8A2F5F` | `#C96AA6` | plum (brand-led) |
+| 2 | `#D06B3A` | `#C8622F` | copper (brand-led) |
+| 3 | `#2A78D6` | `#3987E5` | blue |
+| 4 | `#1BAF7A` | `#199E70` | aqua, also used as the "Other" fold |
+
+- These pass the dataviz validator on all pairs, on both the light (`#F2F3F0`) and dark (`#0C0C0C`) map backgrounds. The closest pair sits in the colorblind floor band, so always pair color with labels, a legend and tooltips.
+- **Bubble maps, scatter plots and other all-pairs forms take at most 4 categories.** Fold the rest into slot 4, or let people isolate categories through filters. No set of 8 hues passes on those forms.
+- Bar and line charts compare only adjacent series, so they can go further. Run `validate_palette.js` (dataviz skill) before adding a slot.
+- Text, values and labels use text tokens, never a series color.
 
 ## Typography
 

@@ -2,7 +2,8 @@
 // and the entity_history trigger record who made each change.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { normalizeName } from "@/lib/dedupe";
+import { normalizeName, slugify } from "@/lib/dedupe";
+import { geocodeSite } from "@/lib/geocode";
 import type { AnnouncementDraft, Diff, PartyDraft, QueuePayload } from "./types";
 
 class ApplyError extends Error {}
@@ -21,7 +22,7 @@ const mustRow = <T>(r: { data: T; error: { message: string } | null }, what: str
 
 const newValues = (set: Diff) => Object.fromEntries(Object.entries(set).map(([k, v]) => [k, v.new]));
 
-async function resolveOrganization(db: SupabaseClient, name: string, orgType: PartyDraft["org_type"], parentName: string | null): Promise<string> {
+export async function resolveOrganization(db: SupabaseClient, name: string, orgType: PartyDraft["org_type"], parentName: string | null): Promise<string> {
   const normalized = normalizeName(name);
   const byName = must(await db.from("organizations").select("id").eq("normalized_name", normalized).maybeSingle(), "find organization");
   if (byName) return byName.id;
@@ -88,11 +89,46 @@ export async function applyProposal(db: SupabaseClient, p: QueuePayload): Promis
       must(await db.from("sites").update(newValues(p.set)).eq("id", p.site_id), "update site");
       return;
     case "possible_new_site": {
-      const siteId = mustRow(await db.from("sites").insert({ ...p.site, is_published: false }).select("id").single(), "create site").id;
+      const siteId = await createSite(db, { is_published: false, ...p.site });
       for (const a of p.announcements) await createAnnouncement(db, { ...a, site_id: siteId });
       return;
     }
+    case "new_company": {
+      const existing = must(await db.from("companies").select("id").eq("normalized_name", normalizeName(p.company.name)).maybeSingle(), "find company");
+      const companyId = existing?.id ?? mustRow(
+        await db.from("companies").insert({ ...p.company, slug: await freeSlug(db, p.company.name) }).select("id").single(),
+        "create company",
+      ).id;
+      const siteId = await createSite(db, { ...p.site, company_id: companyId });
+      for (const a of p.announcements) await createAnnouncement(db, { ...a, company_id: companyId, site_id: siteId });
+      return;
+    }
+    case "tip":
+      return; // handled by the reviewer outside the queue
   }
 }
+
+async function freeSlug(db: SupabaseClient, name: string) {
+  const base = slugify(name);
+  const { data } = await db.from("companies").select("slug").like("slug", `${base}%`);
+  const taken = new Set((data ?? []).map((r) => r.slug));
+  let slug = base;
+  for (let i = 2; taken.has(slug); i++) slug = `${base}-${i}`;
+  return slug;
+}
+
+/** Inserts a site and geocodes it when it has no coordinates yet. */
+async function createSite(db: SupabaseClient, site: Record<string, unknown>) {
+  const id = mustRow(await db.from("sites").insert(site).select("id").single(), "create site").id;
+  if (site.lat == null && (site.address || site.city)) {
+    const hit = await geocodeSite({
+      address: (site.address as string) ?? null, city: (site.city as string) ?? null,
+      state: (site.state as string) ?? null, country: (site.country as string) ?? null,
+    }).catch(() => null);
+    if (hit) must(await db.from("sites").update({ lat: hit.lat, lng: hit.lng }).eq("id", id), "geocode site");
+  }
+  return id;
+}
+
 
 export { ApplyError };

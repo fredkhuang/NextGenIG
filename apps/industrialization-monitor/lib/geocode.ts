@@ -58,13 +58,17 @@ export class Geocoder {
   async geocode(q: { address: string | null; city: string | null; state: string | null; country: string | null }) {
     const key = [q.address, q.city, q.state, q.country].map((s) => (s ?? "").trim().toLowerCase()).join("|");
     if (key in this.cache) return this.cache[key];
-    let result: GeocodeResult | null = null;
-    const us = !q.country || /^(us|usa|united states)/i.test(q.country);
-    if (q.address && us) {
-      result = await census([q.address, q.city, q.state].filter(Boolean).join(", "));
-    }
-    if (!result && q.city) result = await nominatim(q.city, q.state, q.country);
+    const result = await geocodeSite(q);
     this.cache[key] = result;
     return result;
   }
+}
+
+/** One uncached lookup: Census for US street addresses, then Nominatim by city. */
+export async function geocodeSite(q: { address: string | null; city: string | null; state: string | null; country: string | null }) {
+  let result: GeocodeResult | null = null;
+  const us = !q.country || /^(us|usa|united states)/i.test(q.country);
+  if (q.address && us) result = await census([q.address, q.city, q.state].filter(Boolean).join(", "));
+  if (!result && q.city) result = await nominatim(q.city, q.state, q.country);
+  return result;
 }

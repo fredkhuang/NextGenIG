@@ -1,3 +1,4 @@
+import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -14,4 +15,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// BotID adds the rewrites its invisible challenge needs (protected paths: instrumentation-client.ts).
+export default withBotId(nextConfig);

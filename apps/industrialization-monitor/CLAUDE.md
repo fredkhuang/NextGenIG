@@ -24,4 +24,4 @@ Read `node_modules/next/dist/docs/` before using Next APIs (this version differs
 
 ## Env
 `.env.local` here holds the Supabase URL, anon key and service role key (Vercel needs `MAP_DATABASE_URL` for the map, plus the service role key for submissions); `ANTHROPIC_API_KEY` sits in `~/code/.env.local` (loaded by `lib/env.ts` for scripts).
-Turnstile: `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` (Cloudflare test keys are used automatically in dev).
+Bot protection: Vercel BotID (`instrumentation-client.ts` + `checkBotId()` in app/submit/actions.ts). No keys; it only runs on Vercel and lets everything through locally.

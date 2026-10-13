@@ -4,25 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { canonicalUrl, normalizeName, sameCompany, sourceDomain } from "@/lib/dedupe";
 import type { AnnouncementDraft, Diff, QueuePayload } from "@/lib/queue/types";
 
-// Cloudflare's published test keys (always pass) are used only in development.
-const DEV_SITE_KEY = "1x00000000000000000000AA";
-const DEV_SECRET = "1x0000000000000000000000000000000AA";
-const isDev = process.env.NODE_ENV !== "production";
-
-export const turnstileSiteKey = () => process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? (isDev ? DEV_SITE_KEY : null);
-const turnstileSecret = () => process.env.TURNSTILE_SECRET_KEY ?? (isDev ? DEV_SECRET : null);
-
-export async function verifyTurnstile(token: string | null, ip: string | null): Promise<boolean> {
-  const secret = turnstileSecret();
-  if (!secret || !token) return false;
-  const body = new URLSearchParams({ secret, response: token });
-  if (ip) body.set("remoteip", ip);
-  const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body });
-  const json = (await res.json().catch(() => null)) as { success?: boolean } | null;
-  return json?.success === true;
-}
-
-// Submissions are written with the service role after the Turnstile check (the anon role has no access).
+// Submissions are written with the service role after the BotID check (the anon role has no access).
 export { serviceClient } from "@/lib/supabase/service";
 
 export const hashIp = (ip: string | null) =>

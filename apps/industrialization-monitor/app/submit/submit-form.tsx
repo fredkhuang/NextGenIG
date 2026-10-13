@@ -1,7 +1,6 @@
 "use client";
 
-import Script from "next/script";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { type SubmitState, submitEntry } from "./actions";
 
 type Kind = "new_site" | "correction" | "tip";
@@ -10,24 +9,12 @@ type SiteSummary = { id: string; company: string; place: string; status: string 
 const input = "w-full rounded-md border border-border-strong bg-bg px-2 py-1.5 text-sm";
 const STATUSES = ["development", "construction", "commissioning", "production", "active", "delayed", "inactive", "canceled"];
 
-declare global {
-  interface Window { turnstile?: { reset: (el?: string) => void } }
-}
-
-export function SubmitForm({ site, industries, siteKey }: { site: SiteSummary | null; industries: string[]; siteKey: string | null }) {
+export function SubmitForm({ site, industries }: { site: SiteSummary | null; industries: string[] }) {
   const [kind, setKind] = useState<Kind>(site ? "correction" : "new_site");
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitEntry, { status: "idle" });
 
-  // A token is single-use; get a fresh challenge after every attempt.
-  useEffect(() => {
-    if (state.status !== "idle") window.turnstile?.reset();
-  }, [state]);
-
   if (state.status === "sent") {
     return <p role="status" className="rounded-lg bg-support-subtle p-6">{state.message}</p>;
-  }
-  if (!siteKey) {
-    return <p className="rounded-lg bg-surface-warm p-6">Submissions are temporarily unavailable. Please email us instead.</p>;
   }
 
   const kinds: [Kind, string, string][] = [
@@ -38,7 +25,6 @@ export function SubmitForm({ site, industries, siteKey }: { site: SiteSummary | 
 
   return (
     <form action={action} className="flex flex-col gap-6">
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
       <fieldset className="grid gap-2 sm:grid-cols-3">
         <legend className="mb-2 font-semibold">What are you sending?</legend>
         {kinds.map(([k, title, desc]) => (
@@ -112,7 +98,6 @@ export function SubmitForm({ site, industries, siteKey }: { site: SiteSummary | 
         <label>Company fax<input name="company_fax" tabIndex={-1} autoComplete="off" /></label>
       </div>
 
-      <div className="cf-turnstile" data-sitekey={siteKey} data-theme="auto" />
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" disabled={pending} className="rounded-md bg-primary px-4 py-2 font-semibold text-on-primary disabled:opacity-60">
           {pending ? "Sending…" : "Send for review"}

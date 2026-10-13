@@ -69,7 +69,6 @@ export function MonitorMap({ sites, embed = false }: { sites: MapSite[]; embed?:
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [filters, setFilters] = useState<Filters>({ industries: null, status: ALL, mfg: ALL, siteType: ALL, strategy: ALL });
-  const [view, setView] = useState<"map" | "list">("map");
   const [colors, setColors] = useState<Record<ColorGroup, string> | null>(null);
 
   const industries = useMemo(() => {
@@ -209,10 +208,6 @@ export function MonitorMap({ sites, embed = false }: { sites: MapSite[]; embed?:
     (mapRef.current?.getSource("sites") as GeoJSONSource | undefined)?.setData(geojson);
   }, [geojson]);
 
-  useEffect(() => {
-    if (view === "map") mapRef.current?.resize();
-  }, [view]);
-
   const toggleIndustry = (name: string) =>
     setFilters((f) => {
       const only = f.industries?.size === 1 && f.industries.has(name);
@@ -270,22 +265,13 @@ export function MonitorMap({ sites, embed = false }: { sites: MapSite[]; embed?:
               Clear filters
             </button>
           )}
-          <div className="ml-auto flex overflow-hidden rounded-md border border-border-strong text-sm" role="group" aria-label="View">
-            {(["map", "list"] as const).map((v) => (
-              <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)}
-                className={`px-3 py-1 capitalize ${view === v ? "bg-primary text-on-primary" : "bg-bg"}`}>
-                {v}
-              </button>
-            ))}
-          </div>
         </div>
-        <div className={view === "map" ? "relative min-h-0 flex-1" : "hidden"}>
+        <div className="relative min-h-0 flex-1">
           {/* MapLibre sets position: relative on its container, so size it from an absolute wrapper */}
           <div className="absolute inset-0">
             <div ref={container} className="h-full w-full" aria-label="Map of startup factory and pilot sites" role="region" />
           </div>
         </div>
-        {view === "list" && <SiteTable sites={visible} />}
       </section>
     </div>
   );
@@ -306,32 +292,3 @@ function Select({ label, value, onChange, options }: {
   );
 }
 
-function SiteTable({ sites }: { sites: MapSite[] }) {
-  const rows = [...sites].sort((a, b) => a.company.localeCompare(b.company));
-  return (
-    <div className="min-h-0 flex-1 overflow-auto">
-      <table className="w-full text-sm">
-        <thead className="sticky top-0 bg-bg-subtle text-left">
-          <tr>
-            {["Company", "Location", "Industry", "Status", "Type", "Sq ft", "Production"].map((h) => (
-              <th key={h} scope="col" className="px-3 py-2 font-semibold">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((s) => (
-            <tr key={s.id} className="border-t border-border">
-              <td className="px-3 py-1.5 font-medium">{s.company}</td>
-              <td className="px-3 py-1.5">{place(s)}</td>
-              <td className="px-3 py-1.5">{s.industry}</td>
-              <td className="px-3 py-1.5">{s.status ? STATUS_LABEL[s.status] ?? s.status : "—"}</td>
-              <td className="px-3 py-1.5">{[s.mfg_type, s.site_type].filter(Boolean).join(" · ") || "—"}</td>
-              <td className="px-3 py-1.5 tabular-nums">{fmtNum(s.sqft) ?? "—"}</td>
-              <td className="px-3 py-1.5">{fmtMilestone(s.production_start) ?? "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}

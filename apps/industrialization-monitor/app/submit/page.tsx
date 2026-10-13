@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getMapSites } from "@/lib/public-data";
-import { turnstileSiteKey } from "@/lib/submit";
 import { SubmitForm } from "./submit-form";
 
 export const metadata: Metadata = { title: "Submit a site | Startup Industrialization Monitor" };
@@ -35,5 +34,5 @@ async function Form({ searchParams }: { searchParams: PageProps<"/submit">["sear
   const s = typeof siteId === "string" ? sites.find((x) => x.id === siteId) : undefined;
   const industries = [...new Set(sites.map((x) => x.industry).filter((i): i is string => !!i))].sort();
   const site = s ? { id: s.id, company: s.company, place: [s.city, s.state].filter(Boolean).join(", "), status: s.status } : null;
-  return <SubmitForm site={site} industries={industries} siteKey={turnstileSiteKey()} />;
+  return <SubmitForm site={site} industries={industries} />;
 }

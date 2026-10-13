@@ -1,8 +1,9 @@
 "use server";
 
+import { checkBotId } from "botid/server";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { hashIp, proposalsFor, rateLimited, RATE_LIMIT_PER_HOUR, serviceClient, verifyTurnstile } from "@/lib/submit";
+import { hashIp, proposalsFor, rateLimited, RATE_LIMIT_PER_HOUR, serviceClient } from "@/lib/submit";
 
 export type SubmitState = { status: "idle" | "sent" | "error"; message?: string };
 
@@ -42,11 +43,12 @@ export async function submitEntry(_prev: SubmitState, form: FormData): Promise<S
   // Honeypot: real visitors never see or fill this field.
   if (String(form.get("company_fax") ?? "") !== "") return { status: "sent", message: "Thanks!" };
 
+  // Vercel BotID (invisible; always passes in local development).
+  const verdict = await checkBotId();
+  if (verdict.isBot) return { status: "error", message: "We couldn't verify this browser. Please try again, or email us instead." };
+
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? h.get("x-real-ip");
-  if (!(await verifyTurnstile(String(form.get("cf-turnstile-response") ?? "") || null, ip))) {
-    return { status: "error", message: "Please complete the verification check and try again." };
-  }
 
   const parsed = Schema.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { status: "error", message: parsed.error.issues.map((i) => i.message).join(" ") };
